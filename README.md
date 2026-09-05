@@ -14,3 +14,14 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## 👥 Project Structure & Team Credits
+
+* **Nehal Choudhary (Lead Full-Stack & DevOps Engineer)**
+  * Designed and built the React + Vite frontend application.
+  * Integrated Ethers.js / Web3 provider for wallet connectivity.
+  * Configured GitHub Actions CI/CD pipeline and GitHub Pages deployment.
+  * Deployed and manages the live Sepolia smart contract instance.
+
+* **[Neha Manoj] (Blockchain Developer)**
+  * Authored the core Solidity smart contract architecture (`.sol`).
