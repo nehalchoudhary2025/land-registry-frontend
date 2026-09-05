@@ -19,11 +19,11 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## Project Structure & Credits
 
-* **Nehal Choudhary (Lead Full-Stack, Web3 & DevOps Engineer)**
+* **Nehal Choudhary (Lead Full-Stack, Web3 & DevOps Engineer)-@nehalchoudhary2025**
   * Architected and built the complete React + Vite application.
   * Integrated Web3 state management & MetaMask contract instances.
   * Configured CI/CD pipeline and hosted the live application on GitHub Pages.
   * Deployed, tested, and manages the live Sepolia smart contract instance.
 
-* **Neha Manoj (Contributor)**
+* **Neha Manoj (Contributor)- @nehamanoj07**
   * Provided initial Solidity contract specification/code reference (`.sol`).
