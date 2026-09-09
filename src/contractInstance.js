@@ -1,14 +1,23 @@
 import { ethers } from "ethers";
 
-// Paste your deployed contract address from Remix here
-const CONTRACT_ADDRESS = "0xFd323620A5D9FB277b05F8bA13c5176F311cf10A"; 
+// Your deployed LandRegistry contract address on Sepolia
+const CONTRACT_ADDRESS = "0xFd323620A5D9FB277b05F8bA13c5176F311cf10A";
 
-// ABI defined directly as an array so you don't need to import any JSON files
+// Full ABI matching the actual LandRegistry.sol contract.
+// (Previous version was missing getAllParcelIds, parcels, getOwnershipHistory,
+// and getPendingRequest — which is why parcel data never loaded.)
 const CONTRACT_ABI = [
-  "function registerParcel(uint256 _id, string memory _location, uint256 _area, address _owner) public",
-  "function requestTransfer(uint256 _id, address _newOwner) public",
+  "function registrar() public view returns (address)",
+  "function registerParcel(uint256 _id, string memory _locationRef, uint256 _area, address _owner) public",
+  "function requestTransfer(uint256 _id, address _buyer) public",
   "function approveTransfer(uint256 _id) public",
-  "function getParcel(uint256 _id) public view returns (uint256, string memory, uint256, address, address, bool)"
+  "function getOwnershipHistory(uint256 _id) public view returns (address[] memory)",
+  "function getAllParcelIds() public view returns (uint256[] memory)",
+  "function getPendingRequest(uint256 _id) public view returns (address proposedBuyer, bool exists)",
+  "function parcels(uint256) public view returns (uint256 id, string locationRef, uint256 area, address currentOwner, bool exists)",
+  "event ParcelRegistered(uint256 indexed parcelId, address indexed owner)",
+  "event TransferRequested(uint256 indexed parcelId, address indexed requester, address indexed proposedBuyer)",
+  "event OwnershipTransferred(uint256 indexed parcelId, address indexed oldOwner, address indexed newOwner)",
 ];
 
 export const getContractInstance = async () => {
@@ -17,11 +26,10 @@ export const getContractInstance = async () => {
     throw new Error("MetaMask is required");
   }
 
-  // Switch network to Sepolia automatically
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0xaa36a7" }],
+      params: [{ chainId: "0xaa36a7" }], // Sepolia
     });
   } catch (err) {
     console.warn("Network switch notice:", err.message);
@@ -31,4 +39,11 @@ export const getContractInstance = async () => {
   const signer = await provider.getSigner();
 
   return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+};
+
+export const getCurrentAddress = async () => {
+  if (!window.ethereum) return null;
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+  return await signer.getAddress();
 };
