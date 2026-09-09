@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getContractInstance, getCurrentAddress } from "../contractInstance";
+import { getContractInstance } from "../contractInstance";
 
 export default function RegistrarView() {
   const [id, setId] = useState("");
@@ -44,16 +44,23 @@ export default function RegistrarView() {
       const tx = await contract.registerParcel(idNum, location, Number(area), owner);
       await tx.wait();
 
-      // Verify against real chain state — an outer transaction can succeed
-      // while an inner call (e.g. via a smart-account wallet) reverts.
+      // Verify against real chain state. Checking currentOwner alone isn't
+      // enough — if the call reverted, currentOwner defaults to the zero
+      // address, which could accidentally match a mistyped/empty owner
+      // field. The `exists` flag is the only reliable signal that this
+      // specific parcel was actually created.
       const parcel = await contract.parcels(idNum);
-      if (parcel.currentOwner.toLowerCase() === owner.toLowerCase()) {
+      const reallyRegistered =
+        parcel.exists === true &&
+        parcel.currentOwner.toLowerCase() === owner.toLowerCase();
+
+      if (reallyRegistered) {
         setStatusMsg({ type: "success", text: `Successfully registered parcel #${idNum}.` });
         setId(""); setLocation(""); setArea(""); setOwner("");
       } else {
         setStatusMsg({
           type: "error",
-          text: "Transaction submitted, but registration did not take effect. Only the registrar's wallet can register parcels — check you're connected as the registrar.",
+          text: "Transaction was submitted, but registration did not take effect. Only the registrar's wallet can register parcels — check you're connected as the registrar.",
         });
       }
     } catch (err) {
@@ -63,22 +70,35 @@ export default function RegistrarView() {
     }
   };
 
-  const handleApprove = async (parcelId) => {
+  const handleApprove = async (parcelId, proposedBuyer) => {
     setApprovingId(parcelId);
     setStatusMsg(null);
     try {
       const contract = await getContractInstance();
-      const tx = await contract.approveTransfer(Number(parcelId));
+      const idNum = Number(parcelId);
+
+      const tx = await contract.approveTransfer(idNum);
       await tx.wait();
 
-      const pending = await contract.getPendingRequest(Number(parcelId));
-      if (!pending.exists) {
+      // Verify against real chain state, not just "the pending request is
+      // gone" (that alone can't tell a real approval apart from a request
+      // that never existed in the first place). Confirm ownership actually
+      // moved to the buyer we expected.
+      const [pending, parcel] = await Promise.all([
+        contract.getPendingRequest(idNum),
+        contract.parcels(idNum),
+      ]);
+      const reallyApproved =
+        !pending.exists &&
+        parcel.currentOwner.toLowerCase() === proposedBuyer.toLowerCase();
+
+      if (reallyApproved) {
         setStatusMsg({ type: "success", text: `Transfer approved for parcel #${parcelId}.` });
         await loadPendingRequests();
       } else {
         setStatusMsg({
           type: "error",
-          text: "Transaction submitted, but the approval did not take effect. Only the registrar's wallet can approve transfers.",
+          text: "Transaction was submitted, but the approval did not take effect. Only the registrar's wallet can approve transfers.",
         });
       }
     } catch (err) {
@@ -126,7 +146,7 @@ export default function RegistrarView() {
                   <strong>Parcel #{req.parcelId}</strong> → {req.proposedBuyer}
                 </span>
                 <button
-                  onClick={() => handleApprove(req.parcelId)}
+                  onClick={() => handleApprove(req.parcelId, req.proposedBuyer)}
                   disabled={approvingId === req.parcelId}
                   style={{ padding: "6px 14px", fontSize: "0.85rem" }}
                 >
