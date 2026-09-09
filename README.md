@@ -38,7 +38,7 @@ Ethereum Sepolia, MetaMask, and Ethers.js.
 - Set up GitHub Pages deployment
 - Tested and debugged the complete application
 
-### [Her Name] — Assistance
+### Neha Manoj — Assistance
 - Provided the initial smart contract code used as a basis for the project
 - Assisted with final debugging
 - Made minor code modifications to resolve final errors
