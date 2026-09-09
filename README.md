@@ -61,5 +61,5 @@ Ethereum Sepolia, MetaMask, and Ethers.js.
 - Ownership transfer requests
 - Transfer approval
 - Public land verification
-- Blockchain integration
+- Blockchain  integration
 - 
