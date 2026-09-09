@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { getOwnershipHistory, getParcelDetails } from "../mockContract";
+import { getContractInstance } from "../contractInstance";
 
 export default function PublicVerifierView() {
   const [searchId, setSearchId] = useState("");
+  const [parcel, setParcel] = useState(null);
   const [history, setHistory] = useState(null);
-  const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
 
@@ -12,49 +12,70 @@ export default function PublicVerifierView() {
     e.preventDefault();
     setLoading(true);
     setStatusMsg(null);
+    setParcel(null);
     setHistory(null);
-    setDetails(null);
 
     try {
-      const hist = await getOwnershipHistory(searchId);
-      const det = await getParcelDetails(searchId);
+      const contract = await getContractInstance();
+      const idNum = Number(searchId);
+
+      const parcelData = await contract.parcels(idNum);
+      if (!parcelData.exists) {
+        setStatusMsg({ type: "error", text: `No parcel found with ID #${idNum}.` });
+        return;
+      }
+
+      const hist = await contract.getOwnershipHistory(idNum);
+      setParcel({
+        id: parcelData.id.toString(),
+        locationRef: parcelData.locationRef,
+        area: parcelData.area.toString(),
+        currentOwner: parcelData.currentOwner,
+      });
       setHistory(hist);
-      setDetails(det);
     } catch (err) {
-      setStatusMsg({ type: "error", text: err.message });
+      setStatusMsg({ type: "error", text: err.reason || err.message || "Lookup failed." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ border: "1px solid #ccc", padding: "16px" }}>
+    <div className="card">
       <h2>Public Land Verifier</h2>
-      <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px", maxWidth: "400px", marginBottom: "16px" }}>
-        <input 
-          placeholder="Enter Parcel ID (e.g., PARCEL-001)" 
-          value={searchId} 
-          onChange={(e) => setSearchId(e.target.value)} 
-          required 
-        />
-        <button type="submit" disabled={loading}>{loading ? "Searching..." : "Verify Parcel"}</button>
+      <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 16 }}>
+        Anyone can look up a parcel's current owner and full ownership history — no wallet permission required, this only reads public blockchain data.
+      </p>
+
+      <form onSubmit={handleSearch} style={{ flexDirection: "row", maxWidth: "none" }}>
+        <input placeholder="Enter Parcel ID (e.g., 1)" value={searchId}
+          onChange={(e) => setSearchId(e.target.value)} required style={{ flex: 1 }} />
+        <button type="submit" disabled={loading} style={{ flexShrink: 0 }}>
+          {loading ? "Searching…" : "Verify Parcel"}
+        </button>
       </form>
 
-      {statusMsg && <div style={{ color: "red" }}>{statusMsg.text}</div>}
+      {statusMsg && (
+        <div className={`status-msg ${statusMsg.type}`} style={{ marginTop: 16 }}>
+          ⚠️ {statusMsg.text}
+        </div>
+      )}
 
-      {details && (
-        <div>
+      {parcel && (
+        <div style={{ marginTop: 20 }}>
           <h3>Parcel Details</h3>
-          <p><strong>ID:</strong> {details.id}</p>
-          <p><strong>Location:</strong> {details.locationRef}</p>
-          <p><strong>Area:</strong> {details.area} sq ft</p>
-          <p><strong>Current Owner:</strong> {details.owner}</p>
+          <ul>
+            <li><span>ID</span><span>{parcel.id}</span></li>
+            <li><span>Location</span><span>{parcel.locationRef}</span></li>
+            <li><span>Area</span><span>{parcel.area} sq ft</span></li>
+            <li><span>Current Owner</span><span style={{ wordBreak: "break-all" }}>{parcel.currentOwner}</span></li>
+          </ul>
 
-          <h4>Ownership History Sequence</h4>
-          <ol>
+          <h3>Ownership History</h3>
+          <ol style={{ listStyle: "decimal", paddingLeft: 20 }}>
             {history.map((addr, idx) => (
-              <li key={idx}>
-                {addr} {idx === history.length - 1 ? "(Current Owner)" : ""}
+              <li key={idx} style={{ background: "none", border: "none", padding: "4px 0", wordBreak: "break-all" }}>
+                {addr} {idx === history.length - 1 ? <span className="badge">Current</span> : null}
               </li>
             ))}
           </ol>
