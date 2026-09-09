@@ -1,11 +1,7 @@
 import { ethers } from "ethers";
 
-// Your deployed LandRegistry contract address on Sepolia
 const CONTRACT_ADDRESS = "0xFd323620A5D9FB277b05F8bA13c5176F311cf10A";
 
-// Full ABI matching the actual LandRegistry.sol contract.
-// (Previous version was missing getAllParcelIds, parcels, getOwnershipHistory,
-// and getPendingRequest — which is why parcel data never loaded.)
 const CONTRACT_ABI = [
   "function registrar() public view returns (address)",
   "function registerParcel(uint256 _id, string memory _locationRef, uint256 _area, address _owner) public",
@@ -29,7 +25,7 @@ export const getContractInstance = async () => {
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0xaa36a7" }], // Sepolia
+      params: [{ chainId: "0xaa36a7" }],
     });
   } catch (err) {
     console.warn("Network switch notice:", err.message);
