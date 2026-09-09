@@ -17,13 +17,49 @@ If you are developing a production application, we recommend using TypeScript wi
 
 
 
-## Project Structure & Credits
+# Blockchain Land Registry DApp
 
-* **Nehal Choudhary (Lead Full-Stack, Web3 & DevOps Engineer)-@nehalchoudhary2025**
-  * Architected and built the complete React + Vite application.
-  * Integrated Web3 state management & MetaMask contract instances.
-  * Configured CI/CD pipeline and hosted the live application on GitHub Pages.
-  * Deployed, tested, and manages the live Sepolia smart contract instance.
+A blockchain-based Land Registry DApp developed using React, Solidity,
+Ethereum Sepolia, MetaMask, and Ethers.js.
 
-* **Neha Manoj (Contributor)- @nehamanoj07**
-  * Provided initial Solidity contract specification/code reference (`.sol`).
+## Author
+
+**Nehal Choudhary**
+
+## Contributions
+
+### Nehal Choudhary — Primary Developer
+- Designed and developed the overall Blockchain Land Registry DApp
+- Developed the frontend using React
+- Integrated MetaMask and Ethers.js
+- Integrated the smart contract with the frontend
+- Implemented the application functionality
+- Configured Sepolia network integration
+- Set up GitHub Pages deployment
+- Tested and debugged the complete application
+
+### [Her Name] — Assistance
+- Provided the initial smart contract code used as a basis for the project
+- Assisted with final debugging
+- Made minor code modifications to resolve final errors
+
+## Technologies Used
+
+- React
+- JavaScript
+- Solidity
+- Ethereum Sepolia
+- MetaMask
+- Ethers.js
+- Vite
+- GitHub Pages
+
+## Features
+
+- Land parcel registration
+- Ownership management
+- Ownership transfer requests
+- Transfer approval
+- Public land verification
+- Blockchain integration
+- 
