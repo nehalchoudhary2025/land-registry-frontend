@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
 // Paste your deployed contract address from Remix here
-const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; 
+const CONTRACT_ADDRESS = "0xFd323620A5D9FB277b05F8bA13c5176F311cf10A"; 
 
 // ABI defined directly as an array so you don't need to import any JSON files
 const CONTRACT_ABI = [
