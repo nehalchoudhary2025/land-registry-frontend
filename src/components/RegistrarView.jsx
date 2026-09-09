@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { getContractInstance } from "../contractInstance";
 
+// Some wallets wrap transactions in a "smart account" delegation layer
+// (EIP-7702 / redeemDelegations). When a call reverts inside that wrapper,
+// ethers.js's err.reason / err.message can come back garbled or misleading
+// rather than the contract's actual revert string. So instead of trusting
+// that text, we show one honest, generic message and log the raw error to
+// the console for anyone who needs to debug further.
+function friendlyError(err) {
+  console.error("Raw error (for debugging):", err);
+  return "The transaction did not complete successfully. This usually means the connected wallet doesn't have permission for this action, or the parcel ID is invalid. Check the console for technical details.";
+}
+
 export default function RegistrarView() {
   const [id, setId] = useState("");
   const [location, setLocation] = useState("");
@@ -41,14 +52,19 @@ export default function RegistrarView() {
       const contract = await getContractInstance();
       const idNum = Number(id);
 
-      const tx = await contract.registerParcel(idNum, location, Number(area), owner);
-      await tx.wait();
+      let txFailed = false;
+      try {
+        const tx = await contract.registerParcel(idNum, location, Number(area), owner);
+        await tx.wait();
+      } catch (err) {
+        // Don't trust the error text here — some wallets misreport revert
+        // reasons. We verify against real chain state below regardless.
+        console.warn("Transaction threw (will verify actual chain state):", err);
+        txFailed = true;
+      }
 
-      // Verify against real chain state. Checking currentOwner alone isn't
-      // enough — if the call reverted, currentOwner defaults to the zero
-      // address, which could accidentally match a mistyped/empty owner
-      // field. The `exists` flag is the only reliable signal that this
-      // specific parcel was actually created.
+      // Verify against real chain state — this is the only reliable signal,
+      // whether or not the transaction itself appeared to throw.
       const parcel = await contract.parcels(idNum);
       const reallyRegistered =
         parcel.exists === true &&
@@ -57,14 +73,16 @@ export default function RegistrarView() {
       if (reallyRegistered) {
         setStatusMsg({ type: "success", text: `Successfully registered parcel #${idNum}.` });
         setId(""); setLocation(""); setArea(""); setOwner("");
+      } else if (parcel.exists === true) {
+        setStatusMsg({ type: "error", text: `Parcel #${idNum} already exists with a different owner.` });
       } else {
         setStatusMsg({
           type: "error",
-          text: "Transaction was submitted, but registration did not take effect. Only the registrar's wallet can register parcels — check you're connected as the registrar.",
+          text: "Registration did not take effect. Only the registrar's wallet can register parcels — check you're connected as the registrar.",
         });
       }
     } catch (err) {
-      setStatusMsg({ type: "error", text: err.reason || err.message });
+      setStatusMsg({ type: "error", text: friendlyError(err) });
     } finally {
       setLoading(false);
     }
@@ -77,13 +95,13 @@ export default function RegistrarView() {
       const contract = await getContractInstance();
       const idNum = Number(parcelId);
 
-      const tx = await contract.approveTransfer(idNum);
-      await tx.wait();
+      try {
+        const tx = await contract.approveTransfer(idNum);
+        await tx.wait();
+      } catch (err) {
+        console.warn("Transaction threw (will verify actual chain state):", err);
+      }
 
-      // Verify against real chain state, not just "the pending request is
-      // gone" (that alone can't tell a real approval apart from a request
-      // that never existed in the first place). Confirm ownership actually
-      // moved to the buyer we expected.
       const [pending, parcel] = await Promise.all([
         contract.getPendingRequest(idNum),
         contract.parcels(idNum),
@@ -98,11 +116,11 @@ export default function RegistrarView() {
       } else {
         setStatusMsg({
           type: "error",
-          text: "Transaction was submitted, but the approval did not take effect. Only the registrar's wallet can approve transfers.",
+          text: "Approval did not take effect. Only the registrar's wallet can approve transfers.",
         });
       }
     } catch (err) {
-      setStatusMsg({ type: "error", text: err.reason || err.message });
+      setStatusMsg({ type: "error", text: friendlyError(err) });
     } finally {
       setApprovingId(null);
     }
