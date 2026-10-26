@@ -1,185 +1,117 @@
-/* Reset & Fonts */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
+/* General Layout */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f8fafc;
-  color: #0f172a;
-  min-height: 100vh;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
 }
 
-/* App Header Navbar */
-.app-navbar {
-  background-color: #0f172a;
-  color: #ffffff;
-  padding: 16px 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-icon {
-  font-size: 28px;
-}
-
-.brand-title {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
-
-/* Wallet Status Pill */
-.wallet-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #22c55e; /* Vibrant Green */
-  border-radius: 50%;
-  box-shadow: 0 0 8px #22c55e;
-}
-
-.wallet-address {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: #38bdf8;
-}
-
-/* Main Container */
-.main-container {
-  max-width: 800px;
-  margin: 36px auto;
+.container {
+  max-width: 900px;
+  margin: 40px auto;
   padding: 0 20px;
 }
 
-/* Navigation Tabs */
-.tab-navigation {
-  display: flex;
-  gap: 8px;
-  background-color: #e2e8f0;
-  padding: 6px;
+/* Cards & Headers */
+.card, .header-card {
+  background: #ffffff;
   border-radius: 12px;
-  margin-bottom: 28px;
-}
-
-.tab-button {
-  flex: 1;
-  padding: 10px 16px;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tab-button:hover {
-  color: #0f172a;
-}
-
-.tab-button.active {
-  background-color: #ffffff;
-  color: #2563eb;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-/* Content Card */
-.card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-}
-
-.card-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f1f5f9;
-}
-
-/* Forms & Inputs */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px;
 }
 
-.form-group.full-width {
-  grid-column: span 2;
-}
-
-.form-label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.input-control {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
+/* Wallet Info */
+.wallet-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.wallet-address {
+  font-family: monospace;
+  font-weight: 600;
+  color: #2b6cb0;
+}
+
+/* Navigation Tabs - Working & Clickable */
+.nav-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 10;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  pointer-events: auto;
   transition: all 0.2s ease;
 }
 
-.input-control:focus {
-  outline: none;
-  background-color: #ffffff;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.tab-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
 }
 
-/* Primary Action Button */
-.btn-primary {
-  width: 100%;
-  padding: 14px;
+.tab-btn.active {
   background-color: #2563eb;
   color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+/* Input Fields & Forms */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Action Buttons - Working & Clickable */
+.submit-btn {
+  background-color: #2563eb;
+  color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  padding: 12px 20px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  pointer-events: auto;
+  position: relative;
+  z-index: 10;
+  margin-top: 16px;
+  transition: background 0.2s ease;
 }
 
-.btn-primary:hover {
+.submit-btn:hover {
   background-color: #1d4ed8;
-}
-
-.btn-primary:active {
-  transform: scale(0.99);
 }
