@@ -70,9 +70,9 @@ export default function OwnerView() {
 
   return (
     <div>
-      <div className="card" style={{ marginBottom: 24 }}>
-        <h2>My Owned Parcels</h2>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 16, wordBreak: "break-all" }}>
+      <div className="card">
+        <h2 className="card-title">My Owned Parcels</h2>
+        <p className="hint">
           Connected as: {myAddress}
         </p>
         {ownedParcels.length === 0 ? (
@@ -100,7 +100,7 @@ export default function OwnerView() {
       </div>
 
       <div className="card">
-        <h2>Request Ownership Transfer</h2>
+        <h2 className="card-title">Request Ownership Transfer</h2>
 
         {statusMsg && (
           <div className={`status-msg ${statusMsg.type}`}>
@@ -109,11 +109,19 @@ export default function OwnerView() {
         )}
 
         <form onSubmit={handleRequestTransfer}>
-          <input placeholder="Parcel ID" type="number" value={selectedParcelId}
-            onChange={(e) => setSelectedParcelId(e.target.value)} required />
-          <input placeholder="Buyer Wallet (0x...)" value={buyerAddress}
-            onChange={(e) => setBuyerAddress(e.target.value)} required />
-          <button type="submit" disabled={loading}>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Parcel ID</label>
+              <input className="input-control" type="number" placeholder="e.g. 101" value={selectedParcelId}
+                onChange={(e) => setSelectedParcelId(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Buyer Wallet Address</label>
+              <input className="input-control" type="text" placeholder="0x..." value={buyerAddress}
+                onChange={(e) => setBuyerAddress(e.target.value)} required />
+            </div>
+          </div>
+          <button className="btn-primary" type="submit" disabled={loading}>
             {loading ? "Submitting…" : "Request Transfer"}
           </button>
         </form>
