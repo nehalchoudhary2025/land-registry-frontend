@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { ethers } from "ethers";
-import { contract } from "./contractInstance"; // Adjust path if needed
+import { getContractInstance } from "./contractInstance";
 import "./App.css";
 
 function App() {
   const [activeTab, setActiveTab] = useState("registrar");
-  
+
   // Form input states
   const [parcelId, setParcelId] = useState("");
   const [locationRef, setLocationRef] = useState("");
@@ -17,18 +16,13 @@ function App() {
   const handleRegisterParcel = async (e) => {
     e.preventDefault();
     try {
-      if (!window.ethereum) {
-        alert("Please install MetaMask!");
-        return;
-      }
-
       setLoading(true);
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+
+      // Get the connected contract instance using your async function
+      const contract = await getContractInstance();
 
       // Call your smart contract function
-      const tx = await contract.connect(signer).registerParcel(
+      const tx = await contract.registerParcel(
         parcelId,
         locationRef,
         area,
@@ -53,7 +47,7 @@ function App() {
     <div className="container">
       <div className="header-card">
         <h1 className="header-title">
-          <span>🏛️</span> Blockchain Land Registry
+          Blockchain Land Registry
         </h1>
         <div className="wallet-info">
           <span>Connected wallet</span>
@@ -122,6 +116,20 @@ function App() {
               {loading ? "Processing..." : "Register Parcel"}
             </button>
           </form>
+        </div>
+      )}
+
+      {activeTab === "owner" && (
+        <div className="card">
+          <h2>Owner Actions</h2>
+          <p>Manage your land properties and transfers here.</p>
+        </div>
+      )}
+
+      {activeTab === "verifier" && (
+        <div className="card">
+          <h2>Public Verifier</h2>
+          <p>Verify ownership and land record details transparently.</p>
         </div>
       )}
     </div>
