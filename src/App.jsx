@@ -53,7 +53,7 @@ function App() {
     <div className="container">
       <div className="header-card">
         <h1 className="header-title">
-          Blockchain Land Registry
+          <span>🏛️</span> Blockchain Land Registry
         </h1>
         <div className="wallet-info">
           <span>Connected wallet</span>
