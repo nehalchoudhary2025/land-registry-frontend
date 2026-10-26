@@ -1,86 +1,194 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getContractInstance } from "../contractInstance";
 
-export default function PublicVerifierView() {
-  const [searchId, setSearchId] = useState("");
-  const [parcel, setParcel] = useState(null);
-  const [history, setHistory] = useState(null);
+// Some wallets wrap transactions in a "smart account" delegation layer
+// (EIP-7702 / redeemDelegations). When a call reverts inside that wrapper,
+// ethers.js's err.reason / err.message can come back garbled or misleading
+// rather than the contract's actual revert string. So instead of trusting
+// that text, we show one honest, generic message and log the raw error to
+// the console for anyone who needs to debug further.
+function friendlyError(err) {
+  console.error("Raw error (for debugging):", err);
+  return "The transaction did not complete successfully. This usually means the connected wallet doesn't have permission for this action, or the parcel ID is invalid. Check the console for technical details.";
+}
+
+export default function RegistrarView() {
+  const [id, setId] = useState("");
+  const [location, setLocation] = useState("");
+  const [area, setArea] = useState("");
+  const [owner, setOwner] = useState("");
+
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [approvingId, setApprovingId] = useState(null);
   const [statusMsg, setStatusMsg] = useState(null);
 
-  const handleSearch = async (e) => {
+  const loadPendingRequests = async () => {
+    try {
+      const contract = await getContractInstance();
+      const ids = await contract.getAllParcelIds();
+      const pending = [];
+      for (const parcelId of ids) {
+        const req = await contract.getPendingRequest(parcelId);
+        if (req.exists) {
+          pending.push({ parcelId: parcelId.toString(), proposedBuyer: req.proposedBuyer });
+        }
+      }
+      setPendingRequests(pending);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadPendingRequests();
+  }, []);
+
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     setStatusMsg(null);
-    setParcel(null);
-    setHistory(null);
-
     try {
       const contract = await getContractInstance();
-      const idNum = Number(searchId);
+      const idNum = Number(id);
 
-      const parcelData = await contract.parcels(idNum);
-      if (!parcelData.exists) {
-        setStatusMsg({ type: "error", text: `No parcel found with ID #${idNum}.` });
-        return;
+      let txFailed = false;
+      try {
+        const tx = await contract.registerParcel(idNum, location, Number(area), owner);
+        await tx.wait();
+      } catch (err) {
+        // Don't trust the error text here — some wallets misreport revert
+        // reasons. We verify against real chain state below regardless.
+        console.warn("Transaction threw (will verify actual chain state):", err);
+        txFailed = true;
       }
 
-      const hist = await contract.getOwnershipHistory(idNum);
-      setParcel({
-        id: parcelData.id.toString(),
-        locationRef: parcelData.locationRef,
-        area: parcelData.area.toString(),
-        currentOwner: parcelData.currentOwner,
-      });
-      setHistory(hist);
+      // Verify against real chain state — this is the only reliable signal,
+      // whether or not the transaction itself appeared to throw.
+      const parcel = await contract.parcels(idNum);
+      const reallyRegistered =
+        parcel.exists === true &&
+        parcel.currentOwner.toLowerCase() === owner.toLowerCase();
+
+      if (reallyRegistered) {
+        setStatusMsg({ type: "success", text: `Successfully registered parcel #${idNum}.` });
+        setId(""); setLocation(""); setArea(""); setOwner("");
+      } else if (parcel.exists === true) {
+        setStatusMsg({ type: "error", text: `Parcel #${idNum} already exists with a different owner.` });
+      } else {
+        setStatusMsg({
+          type: "error",
+          text: "Registration did not take effect. Only the registrar's wallet can register parcels — check you're connected as the registrar.",
+        });
+      }
     } catch (err) {
-      setStatusMsg({ type: "error", text: err.reason || err.message || "Lookup failed." });
+      setStatusMsg({ type: "error", text: friendlyError(err) });
     } finally {
       setLoading(false);
     }
   };
 
+  const handleApprove = async (parcelId, proposedBuyer) => {
+    setApprovingId(parcelId);
+    setStatusMsg(null);
+    try {
+      const contract = await getContractInstance();
+      const idNum = Number(parcelId);
+
+      try {
+        const tx = await contract.approveTransfer(idNum);
+        await tx.wait();
+      } catch (err) {
+        console.warn("Transaction threw (will verify actual chain state):", err);
+      }
+
+      const [pending, parcel] = await Promise.all([
+        contract.getPendingRequest(idNum),
+        contract.parcels(idNum),
+      ]);
+      const reallyApproved =
+        !pending.exists &&
+        parcel.currentOwner.toLowerCase() === proposedBuyer.toLowerCase();
+
+      if (reallyApproved) {
+        setStatusMsg({ type: "success", text: `Transfer approved for parcel #${parcelId}.` });
+        await loadPendingRequests();
+      } else {
+        setStatusMsg({
+          type: "error",
+          text: "Approval did not take effect. Only the registrar's wallet can approve transfers.",
+        });
+      }
+    } catch (err) {
+      setStatusMsg({ type: "error", text: friendlyError(err) });
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   return (
-    <div className="card">
-      <h2 className="card-title">Public Land Verifier</h2>
-      <p className="hint">
-        Anyone can look up a parcel's current owner and full ownership history — no wallet permission required, this only reads public blockchain data.
-      </p>
+    <div>
+      <div className="card">
+        <h2 className="card-title">Register New Parcel</h2>
 
-      <form onSubmit={handleSearch} className="search-row">
-        <input className="input-control" placeholder="Enter Parcel ID (e.g., 1)" value={searchId}
-          onChange={(e) => setSearchId(e.target.value)} required />
-        <button className="btn-primary" type="submit" disabled={loading}>
-          {loading ? "Searching…" : "Verify Parcel"}
-        </button>
-      </form>
+        {statusMsg && (
+          <div className={`status-msg ${statusMsg.type}`}>
+            {statusMsg.type === "success" ? "✅" : "⚠️"} {statusMsg.text}
+          </div>
+        )}
 
-      {statusMsg && (
-        <div className={`status-msg ${statusMsg.type}`} style={{ marginTop: 16 }}>
-          ⚠️ {statusMsg.text}
-        </div>
-      )}
+        <form onSubmit={handleRegister}>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Parcel ID</label>
+              <input className="input-control" type="number" placeholder="e.g. 101" value={id}
+                onChange={(e) => setId(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Location Reference</label>
+              <input className="input-control" type="text" placeholder="e.g. Block A, Sector 4" value={location}
+                onChange={(e) => setLocation(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Area (sq. ft.)</label>
+              <input className="input-control" type="number" placeholder="e.g. 2400" value={area}
+                onChange={(e) => setArea(e.target.value)} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Owner Wallet Address</label>
+              <input className="input-control" type="text" placeholder="0x..." value={owner}
+                onChange={(e) => setOwner(e.target.value)} required />
+            </div>
+          </div>
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? "Registering…" : "Register Parcel"}
+          </button>
+        </form>
+      </div>
 
-      {parcel && (
-        <div style={{ marginTop: 20 }}>
-          <h3>Parcel Details</h3>
+      <div className="card">
+        <h2 className="card-title">Pending Transfer Requests</h2>
+        {pendingRequests.length === 0 ? (
+          <p style={{ color: "var(--text-muted)" }}>No pending transfers.</p>
+        ) : (
           <ul>
-            <li><span>ID</span><span>{parcel.id}</span></li>
-            <li><span>Location</span><span>{parcel.locationRef}</span></li>
-            <li><span>Area</span><span>{parcel.area} sq ft</span></li>
-            <li><span>Current Owner</span><span style={{ wordBreak: "break-all" }}>{parcel.currentOwner}</span></li>
-          </ul>
-
-          <h3>Ownership History</h3>
-          <ol style={{ listStyle: "decimal", paddingLeft: 20 }}>
-            {history.map((addr, idx) => (
-              <li key={idx} style={{ background: "none", border: "none", padding: "4px 0", wordBreak: "break-all" }}>
-                {addr} {idx === history.length - 1 ? <span className="badge">Current</span> : null}
+            {pendingRequests.map((req) => (
+              <li key={req.parcelId}>
+                <span>
+                  <strong>Parcel #{req.parcelId}</strong> → {req.proposedBuyer}
+                </span>
+                <button
+                  onClick={() => handleApprove(req.parcelId, req.proposedBuyer)}
+                  disabled={approvingId === req.parcelId}
+                  className="btn-primary btn-small"
+                >
+                  {approvingId === req.parcelId ? "Approving…" : "Approve"}
+                </button>
               </li>
             ))}
-          </ol>
-        </div>
-      )}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
