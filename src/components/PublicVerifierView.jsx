@@ -42,15 +42,15 @@ export default function PublicVerifierView() {
 
   return (
     <div className="card">
-      <h2>Public Land Verifier</h2>
-      <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 16 }}>
+      <h2 className="card-title">Public Land Verifier</h2>
+      <p className="hint">
         Anyone can look up a parcel's current owner and full ownership history — no wallet permission required, this only reads public blockchain data.
       </p>
 
-      <form onSubmit={handleSearch} style={{ flexDirection: "row", maxWidth: "none" }}>
-        <input placeholder="Enter Parcel ID (e.g., 1)" value={searchId}
-          onChange={(e) => setSearchId(e.target.value)} required style={{ flex: 1 }} />
-        <button type="submit" disabled={loading} style={{ flexShrink: 0 }}>
+      <form onSubmit={handleSearch} className="search-row">
+        <input className="input-control" placeholder="Enter Parcel ID (e.g., 1)" value={searchId}
+          onChange={(e) => setSearchId(e.target.value)} required />
+        <button className="btn-primary" type="submit" disabled={loading}>
           {loading ? "Searching…" : "Verify Parcel"}
         </button>
       </form>
