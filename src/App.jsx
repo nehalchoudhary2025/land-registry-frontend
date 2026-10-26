@@ -17,13 +17,13 @@ function App() {
   const truncateAddress = (addr) =>
     addr ? `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}` : "Not Connected";
 
-  // Handle register parcel submission via MetaMask & Smart Contract
+  // Handle register parcel submission via Sepolia MetaMask & Smart Contract
   const handleRegisterParcel = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
 
-      // Get contract instance connected to MetaMask signer
+      // Get contract instance connected to MetaMask signer (switches to Sepolia automatically)
       const contract = await getContractInstance();
 
       // Call the smart contract function
