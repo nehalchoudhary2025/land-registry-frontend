@@ -14,7 +14,7 @@ function App() {
       {/* Top Navigation Bar */}
       <nav className="app-navbar">
         <div className="brand">
-          <span className="brand-icon">🏛️</span>
+         
           <span className="brand-title">Blockchain Land Registry</span>
         </div>
 
