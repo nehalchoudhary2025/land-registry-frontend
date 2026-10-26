@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-const CONTRACT_ADDRESS = "0x26240BDa5C92f2fFB59a75C1acFCb7487568add2";
+const CONTRACT_ADDRESS = "0x4234c7996dAC6CAa0e6CF0671910cef9379692f8";
 
 const CONTRACT_ABI = [
   "function registrar() public view returns (address)",
