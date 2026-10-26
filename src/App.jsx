@@ -25,7 +25,7 @@ export default function App() {
     <div>
       <nav className="app-navbar">
         <div className="brand">
-          <span className="brand-icon">🏛️</span>
+         
           <span className="brand-title">Blockchain Land Registry</span>
         </div>
         <div className="wallet-pill">
